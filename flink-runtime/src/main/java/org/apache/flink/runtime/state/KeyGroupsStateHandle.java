@@ -83,7 +83,7 @@ public class KeyGroupsStateHandle implements StreamStateHandle, KeyedStateHandle
         if (offsets.getKeyGroupRange().getNumberOfKeyGroups() <= 0) {
             return null;
         }
-        return new KeyGroupsStateHandle(offsets, stateHandle);
+        return new KeyGroupsStateHandle(offsets, (StreamStateHandle) stateHandle.asShared());
     }
 
     @Override
@@ -149,5 +149,16 @@ public class KeyGroupsStateHandle implements StreamStateHandle, KeyedStateHandle
                 + ", stateHandle="
                 + stateHandle
                 + '}';
+    }
+
+    @Override
+    public boolean isShared() {
+        return stateHandle.isShared();
+    }
+
+    @Override
+    public StateObject asShared() {
+        return new KeyGroupsStateHandle(
+                groupRangeOffsets, (StreamStateHandle) stateHandle.asShared());
     }
 }
