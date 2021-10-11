@@ -18,7 +18,10 @@
 
 package org.apache.flink.runtime.checkpoint;
 
+import org.apache.flink.runtime.state.CompositeStateHandle;
+import org.apache.flink.runtime.state.SharedStateRegistry;
 import org.apache.flink.runtime.state.StateObject;
+import org.apache.flink.runtime.state.StateObjectVisitor;
 import org.apache.flink.runtime.state.StateUtil;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -30,7 +33,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
+
+import static org.apache.flink.runtime.state.StateUtil.transformCollection;
 
 /**
  * This class represents a generic collection for {@link StateObject}s. Being a state object itself,
@@ -39,7 +45,8 @@ import java.util.function.Predicate;
  *
  * @param <T> type of the contained state objects.
  */
-public class StateObjectCollection<T extends StateObject> implements Collection<T>, StateObject {
+public class StateObjectCollection<T extends StateObject>
+        implements Collection<T>, StateObject, CompositeStateHandle {
 
     private static final long serialVersionUID = 1L;
 
@@ -220,5 +227,22 @@ public class StateObjectCollection<T extends StateObject> implements Collection<
 
     private static long getSizeNullSafe(StateObject stateObject) {
         return stateObject != null ? stateObject.getStateSize() : 0L;
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        for (T stateObject : stateObjects) {
+            stateObject.accept(visitor);
+        }
+        visitor.visit(this);
+    }
+
+    @Override
+    public void registerSharedStates(SharedStateRegistry stateRegistry) {}
+
+    @Override
+    public StateObject transform(Function<StateObject, StateObject> transformation) {
+        return transformation.apply(
+                new StateObjectCollection<>(transformCollection(stateObjects, transformation)));
     }
 }

@@ -22,7 +22,9 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.runtime.state.KeyGroupRange;
 import org.apache.flink.runtime.state.KeyedStateHandle;
 import org.apache.flink.runtime.state.SharedStateRegistry;
-import org.apache.flink.runtime.state.SharedStateRegistryKey;
+import org.apache.flink.runtime.state.StateObject;
+import org.apache.flink.runtime.state.StateObjectID;
+import org.apache.flink.runtime.state.StateObjectVisitor;
 import org.apache.flink.runtime.state.StreamStateHandle;
 import org.apache.flink.runtime.state.filesystem.FileStateHandle;
 import org.apache.flink.runtime.state.memory.ByteStreamStateHandle;
@@ -31,6 +33,10 @@ import javax.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.toList;
+import static org.apache.flink.runtime.state.StateUtil.transformAndCast;
 
 /** {@link ChangelogStateHandle} implementation based on {@link StreamStateHandle}. */
 @Internal
@@ -61,6 +67,22 @@ public final class ChangelogStateHandleStreamImpl implements ChangelogStateHandl
                 handleAndOffset ->
                         stateRegistry.registerReference(
                                 getKey(handleAndOffset.f0), handleAndOffset.f0));
+    }
+
+    @Override
+    public StateObject transform(Function<StateObject, StateObject> transformation) {
+        return transformation.apply(
+                new ChangelogStateHandleStreamImpl(
+                        handlesAndOffsets.stream()
+                                .map(
+                                        handleAndOffset ->
+                                                Tuple2.of(
+                                                        transformAndCast(
+                                                                handleAndOffset.f0, transformation),
+                                                        handleAndOffset.f1))
+                                .collect(toList()),
+                        keyGroupRange,
+                        size));
     }
 
     @Override
@@ -96,23 +118,28 @@ public final class ChangelogStateHandleStreamImpl implements ChangelogStateHandl
         return size;
     }
 
-    private static SharedStateRegistryKey getKey(StreamStateHandle stateHandle) {
+    private static StateObjectID getKey(StreamStateHandle stateHandle) {
         // StateHandle key used in SharedStateRegistry should only be based on the file name
         // and not on backend UUID or keygroup (multiple handles can refer to the same file and
         // making keys unique will effectively disable sharing)
         if (stateHandle instanceof FileStateHandle) {
-            return new SharedStateRegistryKey(
-                    ((FileStateHandle) stateHandle).getFilePath().toString());
+            return StateObjectID.of(((FileStateHandle) stateHandle).getFilePath().toString());
         } else if (stateHandle instanceof ByteStreamStateHandle) {
-            return new SharedStateRegistryKey(
-                    ((ByteStreamStateHandle) stateHandle).getHandleName());
+            return StateObjectID.of(((ByteStreamStateHandle) stateHandle).getHandleName());
         } else {
-            return new SharedStateRegistryKey(
-                    Integer.toString(System.identityHashCode(stateHandle)));
+            return StateObjectID.of(Integer.toString(System.identityHashCode(stateHandle)));
         }
     }
 
     public List<Tuple2<StreamStateHandle, Long>> getHandlesAndOffsets() {
         return Collections.unmodifiableList(handlesAndOffsets);
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        for (Tuple2<StreamStateHandle, Long> t : handlesAndOffsets) {
+            t.f0.accept(visitor);
+        }
+        visitor.visit(this);
     }
 }

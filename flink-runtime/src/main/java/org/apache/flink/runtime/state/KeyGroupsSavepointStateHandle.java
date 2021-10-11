@@ -18,6 +18,10 @@
 
 package org.apache.flink.runtime.state;
 
+import java.util.function.Function;
+
+import static org.apache.flink.runtime.state.StateUtil.transformAndCast;
+
 /** A {@link KeyGroupsStateHandle} that describes a savepoint in the unified format. */
 public class KeyGroupsSavepointStateHandle extends KeyGroupsStateHandle
         implements SavepointKeyedStateHandle {
@@ -68,5 +72,18 @@ public class KeyGroupsSavepointStateHandle extends KeyGroupsStateHandle
                 + ", stateHandle="
                 + getDelegateStateHandle()
                 + '}';
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        stateHandle.accept(visitor);
+        visitor.visit(this);
+    }
+
+    @Override
+    public StateObject transform(Function<StateObject, StateObject> transformation) {
+        return transformation.apply(
+                new KeyGroupsSavepointStateHandle(
+                        super.groupRangeOffsets, transformAndCast(stateHandle, transformation)));
     }
 }

@@ -27,6 +27,8 @@ import org.apache.flink.runtime.state.OperatorStateHandle;
 import org.apache.flink.runtime.state.OperatorStreamStateHandle;
 import org.apache.flink.runtime.state.ResultSubpartitionStateHandle;
 import org.apache.flink.runtime.state.SharedStateRegistry;
+import org.apache.flink.runtime.state.StateObject;
+import org.apache.flink.runtime.state.StateObjectVisitor;
 import org.apache.flink.runtime.state.memory.ByteStreamStateHandle;
 
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class StateHandleDummyUtil {
 
@@ -188,11 +191,21 @@ public class StateHandleDummyUtil {
         public void registerSharedStates(SharedStateRegistry stateRegistry) {}
 
         @Override
+        public StateObject transform(Function<StateObject, StateObject> transformation) {
+            return transformation.apply(this);
+        }
+
+        @Override
         public void discardState() throws Exception {}
 
         @Override
         public long getStateSize() {
             return 0L;
+        }
+
+        @Override
+        public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+            visitor.visit(this);
         }
     }
 }

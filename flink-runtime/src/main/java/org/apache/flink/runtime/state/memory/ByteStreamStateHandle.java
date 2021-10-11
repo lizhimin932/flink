@@ -19,14 +19,21 @@
 package org.apache.flink.runtime.state.memory;
 
 import org.apache.flink.core.fs.FSDataInputStream;
+import org.apache.flink.runtime.state.ShareableStateHandle;
+import org.apache.flink.runtime.state.StateObject;
+import org.apache.flink.runtime.state.StateObjectID;
+import org.apache.flink.runtime.state.StateObjectVisitor;
 import org.apache.flink.runtime.state.StreamStateHandle;
 import org.apache.flink.util.Preconditions;
 
 import java.io.IOException;
 import java.util.Optional;
 
-/** A state handle that contains stream state in a byte array. */
-public class ByteStreamStateHandle implements StreamStateHandle {
+/**
+ * A state handle that contains stream state in a byte array. Can be {@link ShareableStateHandle
+ * shared} if snapshots of multiple state backends were multiplexed over a single byte stream.
+ */
+public class ByteStreamStateHandle implements StreamStateHandle, ShareableStateHandle {
 
     private static final long serialVersionUID = -5280226231202517594L;
 
@@ -40,10 +47,17 @@ public class ByteStreamStateHandle implements StreamStateHandle {
      */
     private final String handleName;
 
+    private final boolean shared;
+
     /** Creates a new ByteStreamStateHandle containing the given data. */
     public ByteStreamStateHandle(String handleName, byte[] data) {
+        this(handleName, data, false);
+    }
+
+    public ByteStreamStateHandle(String handleName, byte[] data, boolean shared) {
         this.handleName = Preconditions.checkNotNull(handleName);
         this.data = Preconditions.checkNotNull(data);
+        this.shared = shared;
     }
 
     @Override
@@ -54,6 +68,21 @@ public class ByteStreamStateHandle implements StreamStateHandle {
     @Override
     public Optional<byte[]> asBytesIfInMemory() {
         return Optional.of(getData());
+    }
+
+    @Override
+    public StateObjectID getID() {
+        return StateObjectID.of(handleName);
+    }
+
+    @Override
+    public boolean isShared() {
+        return shared;
+    }
+
+    @Override
+    public StateObject asShared() {
+        return new ByteStreamStateHandle(handleName, data, true);
     }
 
     public byte[] getData() {
@@ -145,5 +174,10 @@ public class ByteStreamStateHandle implements StreamStateHandle {
                 return -1;
             }
         }
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        visitor.visit(this);
     }
 }

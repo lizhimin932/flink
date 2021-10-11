@@ -23,6 +23,9 @@ import org.apache.flink.util.Preconditions;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Function;
+
+import static org.apache.flink.runtime.state.StateUtil.transformAndCast;
 
 /**
  * A handle to the partitioned stream operator state after it has been checkpointed. This state
@@ -34,10 +37,10 @@ public class KeyGroupsStateHandle implements StreamStateHandle, KeyedStateHandle
     private static final long serialVersionUID = -8070326169926626355L;
 
     /** Range of key-groups with their respective offsets in the stream state */
-    private final KeyGroupRangeOffsets groupRangeOffsets;
+    protected final KeyGroupRangeOffsets groupRangeOffsets;
 
     /** Inner stream handle to the actual states of the key-groups in the range */
-    private final StreamStateHandle stateHandle;
+    protected final StreamStateHandle stateHandle;
 
     /**
      * @param groupRangeOffsets range of key-group ids that in the state of this handle
@@ -97,6 +100,13 @@ public class KeyGroupsStateHandle implements StreamStateHandle, KeyedStateHandle
     }
 
     @Override
+    public StateObject transform(Function<StateObject, StateObject> transformation) {
+        return transformation.apply(
+                new KeyGroupsStateHandle(
+                        groupRangeOffsets, transformAndCast(stateHandle, transformation)));
+    }
+
+    @Override
     public void discardState() throws Exception {
         stateHandle.discardState();
     }
@@ -149,5 +159,11 @@ public class KeyGroupsStateHandle implements StreamStateHandle, KeyedStateHandle
                 + ", stateHandle="
                 + stateHandle
                 + '}';
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        stateHandle.accept(visitor);
+        visitor.visit(this);
     }
 }

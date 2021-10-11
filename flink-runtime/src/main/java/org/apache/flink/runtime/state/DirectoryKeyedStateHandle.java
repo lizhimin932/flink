@@ -20,6 +20,10 @@ package org.apache.flink.runtime.state;
 
 import javax.annotation.Nonnull;
 
+import java.util.function.Function;
+
+import static org.apache.flink.runtime.state.StateUtil.transformAndCast;
+
 /**
  * This class is a keyed state handle based on a directory. It combines a {@link
  * DirectoryStateHandle} and a {@link KeyGroupRange}.
@@ -29,7 +33,7 @@ public class DirectoryKeyedStateHandle implements KeyedStateHandle {
     private static final long serialVersionUID = 1L;
 
     /** The directory state handle. */
-    @Nonnull private final DirectoryStateHandle directoryStateHandle;
+    @Nonnull protected final DirectoryStateHandle directoryStateHandle;
 
     /** The key-group range. */
     @Nonnull private final KeyGroupRange keyGroupRange;
@@ -76,6 +80,13 @@ public class DirectoryKeyedStateHandle implements KeyedStateHandle {
     }
 
     @Override
+    public StateObject transform(Function<StateObject, StateObject> transformation) {
+        return transformation.apply(
+                new DirectoryKeyedStateHandle(
+                        transformAndCast(directoryStateHandle, transformation), keyGroupRange));
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -107,5 +118,11 @@ public class DirectoryKeyedStateHandle implements KeyedStateHandle {
                 + ", keyGroupRange="
                 + keyGroupRange
                 + '}';
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        directoryStateHandle.accept(visitor);
+        visitor.visit(this);
     }
 }

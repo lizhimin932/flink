@@ -25,6 +25,9 @@ import javax.annotation.Nonnull;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+
+import static org.apache.flink.runtime.state.StateUtil.transformAndCast;
 
 /**
  * State handle for local copies of {@link IncrementalRemoteKeyedStateHandle}. Consists of a {@link
@@ -46,7 +49,7 @@ public class IncrementalLocalKeyedStateHandle extends DirectoryKeyedStateHandle
     @Nonnull private final StreamStateHandle metaDataState;
 
     /** Set with the ids of all shared state handles created by the checkpoint. */
-    @Nonnull private final Set<StateHandleID> sharedStateHandleIDs;
+    @Nonnull private final Set<StateObjectID> sharedStateHandleIDs;
 
     public IncrementalLocalKeyedStateHandle(
             @Nonnull UUID backendIdentifier,
@@ -54,7 +57,7 @@ public class IncrementalLocalKeyedStateHandle extends DirectoryKeyedStateHandle
             @Nonnull DirectoryStateHandle directoryStateHandle,
             @Nonnull KeyGroupRange keyGroupRange,
             @Nonnull StreamStateHandle metaDataState,
-            @Nonnull Set<StateHandleID> sharedStateHandleIDs) {
+            @Nonnull Set<StateObjectID> sharedStateHandleIDs) {
 
         super(directoryStateHandle, keyGroupRange);
         this.backendIdentifier = backendIdentifier;
@@ -81,7 +84,7 @@ public class IncrementalLocalKeyedStateHandle extends DirectoryKeyedStateHandle
 
     @Override
     @Nonnull
-    public Set<StateHandleID> getSharedStateHandleIDs() {
+    public Set<StateObjectID> getSharedStateHandleIDs() {
         return sharedStateHandleIDs;
     }
 
@@ -143,5 +146,24 @@ public class IncrementalLocalKeyedStateHandle extends DirectoryKeyedStateHandle
                 + metaDataState
                 + "} "
                 + super.toString();
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        directoryStateHandle.accept(visitor);
+        metaDataState.accept(visitor);
+        visitor.visit(this);
+    }
+
+    @Override
+    public StateObject transform(Function<StateObject, StateObject> transformation) {
+        return transformation.apply(
+                new IncrementalLocalKeyedStateHandle(
+                        backendIdentifier,
+                        checkpointId,
+                        transformAndCast(directoryStateHandle, transformation),
+                        getKeyGroupRange(),
+                        transformAndCast(metaDataState, transformation),
+                        sharedStateHandleIDs));
     }
 }

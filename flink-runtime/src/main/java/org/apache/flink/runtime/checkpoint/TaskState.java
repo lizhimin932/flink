@@ -21,13 +21,19 @@ package org.apache.flink.runtime.checkpoint;
 import org.apache.flink.runtime.jobgraph.JobVertexID;
 import org.apache.flink.runtime.state.CompositeStateHandle;
 import org.apache.flink.runtime.state.SharedStateRegistry;
+import org.apache.flink.runtime.state.StateObject;
+import org.apache.flink.runtime.state.StateObjectVisitor;
 import org.apache.flink.util.Preconditions;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
+
+import static org.apache.flink.runtime.state.StateUtil.transformAndCast;
 
 /**
  * Simple container class which contains the task state and key-group state handles for the sub
@@ -143,6 +149,15 @@ public class TaskState implements CompositeStateHandle {
     }
 
     @Override
+    public StateObject transform(Function<StateObject, StateObject> transformation) {
+        TaskState rebuilt = new TaskState(jobVertexID, parallelism, maxParallelism, chainLength);
+        for (Entry<Integer, SubtaskState> entry : subtaskStates.entrySet()) {
+            rebuilt.putState(entry.getKey(), transformAndCast(entry.getValue(), transformation));
+        }
+        return transformation.apply(rebuilt);
+    }
+
+    @Override
     public long getStateSize() {
         long result = 0L;
 
@@ -192,5 +207,13 @@ public class TaskState implements CompositeStateHandle {
                 + ", total size (bytes): "
                 + getStateSize()
                 + ')';
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        for (SubtaskState subtaskState : subtaskStates.values()) {
+            subtaskState.accept(visitor);
+        }
+        visitor.visit(this);
     }
 }

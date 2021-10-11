@@ -22,6 +22,7 @@ import org.apache.flink.runtime.state.KeyGroupRange;
 import org.apache.flink.runtime.state.KeyedStateHandle;
 import org.apache.flink.runtime.state.SharedStateRegistry;
 import org.apache.flink.runtime.state.StateObject;
+import org.apache.flink.runtime.state.StateObjectVisitor;
 import org.apache.flink.util.ExceptionUtils;
 
 import org.apache.flink.shaded.guava30.com.google.common.io.Closer;
@@ -31,9 +32,11 @@ import javax.annotation.Nullable;
 import java.io.Closeable;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableList;
+import static org.apache.flink.runtime.state.StateUtil.transformCollection;
 import static org.apache.flink.util.Preconditions.checkArgument;
 
 /**
@@ -68,6 +71,15 @@ public interface ChangelogStateBackendHandle extends KeyedStateHandle {
         public void registerSharedStates(SharedStateRegistry stateRegistry) {
             stateRegistry.registerAll(materialized);
             stateRegistry.registerAll(nonMaterialized);
+        }
+
+        @Override
+        public StateObject transform(Function<StateObject, StateObject> transformation) {
+            return transformation.apply(
+                    new ChangelogStateBackendHandleImpl(
+                            transformCollection(materialized, transformation),
+                            transformCollection(nonMaterialized, transformation),
+                            keyGroupRange));
         }
 
         @Override
@@ -138,6 +150,17 @@ public interface ChangelogStateBackendHandle extends KeyedStateHandle {
                     ExceptionUtils.rethrowIOException(e);
                 }
             };
+        }
+
+        @Override
+        public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+            for (KeyedStateHandle keyedStateHandle : materialized) {
+                keyedStateHandle.accept(visitor);
+            }
+            for (ChangelogStateHandle handle : nonMaterialized) {
+                handle.accept(visitor);
+            }
+            visitor.visit(this);
         }
     }
 }
