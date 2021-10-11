@@ -29,11 +29,15 @@ import java.util.Optional;
  * ByteStreamStateHandle}. This class is used in the referenced states of {@link
  * IncrementalRemoteKeyedStateHandle}.
  */
-public class PlaceholderStreamStateHandle implements StreamStateHandle {
+public class PlaceholderStreamStateHandle implements StreamStateHandle, ShareableStateHandle {
 
     private static final long serialVersionUID = 1L;
 
-    public PlaceholderStreamStateHandle() {}
+    private final StateObjectID stateHandleID;
+
+    public PlaceholderStreamStateHandle(StateObjectID stateHandleID) {
+        this.stateHandleID = stateHandleID;
+    }
 
     @Override
     public FSDataInputStream openInputStream() {
@@ -48,6 +52,11 @@ public class PlaceholderStreamStateHandle implements StreamStateHandle {
     }
 
     @Override
+    public StateObjectID getID() {
+        return stateHandleID;
+    }
+
+    @Override
     public void discardState() throws Exception {
         // nothing to do.
     }
@@ -55,5 +64,10 @@ public class PlaceholderStreamStateHandle implements StreamStateHandle {
     @Override
     public long getStateSize() {
         return 0L;
+    }
+
+    @Override
+    public <E extends Exception> void accept(StateObjectVisitor<E> visitor) throws E {
+        visitor.visit(this);
     }
 }
