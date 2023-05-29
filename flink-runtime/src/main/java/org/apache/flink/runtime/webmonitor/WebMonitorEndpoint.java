@@ -419,7 +419,8 @@ public class WebMonitorEndpoint<T extends RestfulGateway> extends RestServerEndp
                         responseHeaders,
                         JobExceptionsHeaders.getInstance(),
                         executionGraphCache,
-                        executor);
+                        executor,
+                        resourceManagerRetriever);
 
         JobVertexAccumulatorsHandler jobVertexAccumulatorsHandler =
                 new JobVertexAccumulatorsHandler(
