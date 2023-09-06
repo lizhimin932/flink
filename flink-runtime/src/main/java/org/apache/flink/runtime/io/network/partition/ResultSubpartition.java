@@ -21,10 +21,13 @@ package org.apache.flink.runtime.io.network.partition;
 import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.runtime.checkpoint.CheckpointException;
 import org.apache.flink.runtime.checkpoint.channel.ResultSubpartitionInfo;
+import org.apache.flink.runtime.event.AbstractEvent;
 import org.apache.flink.runtime.io.network.buffer.Buffer;
 import org.apache.flink.runtime.io.network.buffer.BufferConsumer;
+import org.apache.flink.runtime.plugable.SerializationDelegate;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -74,6 +77,16 @@ public abstract class ResultSubpartition {
         return add(bufferConsumer, 0);
     }
 
+    @VisibleForTesting
+    public int add(SerializationDelegate<?> record, ByteBuffer recordBuffer) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @VisibleForTesting
+    public int add(SerializationDelegate<?> record) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Adds the given buffer.
      *
@@ -94,6 +107,17 @@ public abstract class ResultSubpartition {
      */
     public abstract int add(BufferConsumer bufferConsumer, int partialRecordLength)
             throws IOException;
+
+    public int add(AbstractEvent event, BufferConsumer bufferConsumer, int partialRecordLength)
+            throws IOException {
+        return add(bufferConsumer, partialRecordLength);
+    }
+
+    public int add(
+            SerializationDelegate<?> record, BufferConsumer bufferConsumer, int partialRecordLength)
+            throws IOException {
+        return add(bufferConsumer, partialRecordLength);
+    }
 
     public abstract void flush();
 
@@ -124,6 +148,14 @@ public abstract class ResultSubpartition {
     public abstract int getNumberOfQueuedBuffers();
 
     public abstract void bufferSize(int desirableNewBufferSize);
+
+    public boolean inLocal() {
+        return false;
+    }
+
+    public boolean updateLocation(boolean inLocal) {
+        throw new UnsupportedOperationException();
+    }
 
     // ------------------------------------------------------------------------
 
@@ -175,6 +207,95 @@ public abstract class ResultSubpartition {
         public static BufferAndBacklog fromBufferAndLookahead(
                 Buffer current, Buffer.DataType nextDataType, int backlog, int sequenceNumber) {
             return new BufferAndBacklog(current, backlog, nextDataType, sequenceNumber);
+        }
+    }
+
+    // todo hx: should keep it?
+    public static final class EventOrRecordOrBufferAndBacklog {
+        private final Object eventOrRecord;
+
+        private Buffer buffer;
+        private final int buffersInBacklog;
+        private final Buffer.DataType nextDataType;
+        private final int sequenceNumber;
+
+        private final long size;
+
+        public EventOrRecordOrBufferAndBacklog(
+                Buffer buffer,
+                int buffersInBacklog,
+                Buffer.DataType nextDataType,
+                int sequenceNumber,
+                long size) {
+            this.eventOrRecord = null;
+            this.buffer = checkNotNull(buffer);
+            this.buffersInBacklog = buffersInBacklog;
+            this.nextDataType = checkNotNull(nextDataType);
+            this.sequenceNumber = sequenceNumber;
+            this.size = size;
+        }
+
+        public EventOrRecordOrBufferAndBacklog(
+                Object eventOrRecord,
+                int buffersInBacklog,
+                Buffer.DataType nextDataType,
+                int sequenceNumber,
+                long size) {
+            this.eventOrRecord = checkNotNull(eventOrRecord);
+            this.buffer = null;
+            this.buffersInBacklog = buffersInBacklog;
+            this.nextDataType = checkNotNull(nextDataType);
+            this.sequenceNumber = sequenceNumber;
+            this.size = size;
+        }
+
+        public Object getEventOrRecord() {
+            return eventOrRecord;
+        }
+
+        public Buffer getBuffer() {
+            return buffer;
+        }
+
+        public void setBuffer(Buffer buffer) {
+            this.buffer = buffer;
+        }
+
+        public boolean isDataAvailable() {
+            return nextDataType != Buffer.DataType.NONE;
+        }
+
+        public int buffersInBacklog() {
+            return buffersInBacklog;
+        }
+
+        public boolean isEventAvailable() {
+            return nextDataType.isEvent();
+        }
+
+        public Buffer.DataType getNextDataType() {
+            return nextDataType;
+        }
+
+        public int getSequenceNumber() {
+            return sequenceNumber;
+        }
+
+        public long getSize() {
+            return size;
+        }
+
+        public static BufferAndBacklog fromBufferAndLookahead(
+                Buffer current, Buffer.DataType nextDataType, int backlog, int sequenceNumber) {
+            return new BufferAndBacklog(current, backlog, nextDataType, sequenceNumber);
+        }
+
+        public boolean isBuffer() {
+            return this.buffer != null;
+        }
+
+        public boolean isEventOrRecord() {
+            return this.eventOrRecord != null;
         }
     }
 }
