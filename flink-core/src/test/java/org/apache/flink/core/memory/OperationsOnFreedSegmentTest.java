@@ -18,7 +18,7 @@
 
 package org.apache.flink.core.memory;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,26 +29,27 @@ import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.util.function.BiConsumer;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.fail;
 
 /**
  * Various tests with freed memory segments for {@link MemorySegment} (in both heap and off-heap
  * modes).
  */
-public class OperationsOnFreedSegmentTest {
+class OperationsOnFreedSegmentTest {
 
     private static final int PAGE_SIZE = (int) ((Math.random() * 10000) + 1000);
 
     @Test
-    public void testSingleSegmentOperationsHeapSegment() throws Exception {
+    void testSingleSegmentOperationsHeapSegment() throws Exception {
         for (MemorySegment segment : createTestSegments()) {
             testOpsOnFreedSegment(segment);
         }
     }
 
     @Test
-    public void testCompare() {
+    void testCompare() {
         MemorySegment aliveHeap = MemorySegmentFactory.wrap(new byte[PAGE_SIZE]);
         MemorySegment aliveOffHeap = MemorySegmentFactory.allocateUnpooledOffHeapMemory(PAGE_SIZE);
 
@@ -83,12 +84,12 @@ public class OperationsOnFreedSegmentTest {
     }
 
     @Test
-    public void testCopyTo() {
+    void testCopyTo() {
         testAliveVsFree(this::testCopy);
     }
 
     @Test
-    public void testSwap() {
+    void testSwap() {
         testAliveVsFree(this::testSwap);
     }
 
@@ -133,265 +134,122 @@ public class OperationsOnFreedSegmentTest {
 
     private void testOpsOnFreedSegment(MemorySegment segment) throws Exception {
         segment.free();
-        assertTrue(segment.isFreed());
+        assertThat(segment.isFreed()).isTrue();
 
         // --------- bytes -----------
 
-        try {
-            segment.get(0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
+        assertThatThrownBy(() -> segment.get(0))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.get(-1))
+                .isInstanceOfAny(
+                        IllegalStateException.class,
+                        NullPointerException.class,
+                        IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.get(1))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.get(segment.size()))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.get(-segment.size()))
+                .isInstanceOfAny(
+                        IllegalStateException.class,
+                        NullPointerException.class,
+                        IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.get(Integer.MAX_VALUE))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.get(Integer.MIN_VALUE))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
 
-        try {
-            segment.get(-1);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.get(1);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.get(segment.size());
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.get(-segment.size());
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.get(Integer.MAX_VALUE);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.get(Integer.MIN_VALUE);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.put(0, (byte) 0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.put(-1, (byte) 0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.put(1, (byte) 0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.put(segment.size(), (byte) 0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.put(-segment.size(), (byte) 0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.put(Integer.MAX_VALUE, (byte) 0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.put(Integer.MIN_VALUE, (byte) 0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
+        assertThatThrownBy(() -> segment.put(0, (byte) 0))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.put(-1, (byte) 0))
+                .isInstanceOfAny(
+                        IllegalStateException.class,
+                        NullPointerException.class,
+                        IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.put(1, (byte) 0))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.put(segment.size(), (byte) 0))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.put(-segment.size(), (byte) 0))
+                .isInstanceOfAny(
+                        IllegalStateException.class,
+                        NullPointerException.class,
+                        IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.put(Integer.MAX_VALUE, (byte) 0))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.put(Integer.MIN_VALUE, (byte) 0))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
 
         // --------- booleans -----------
+        assertThatThrownBy(() -> segment.getBoolean(0))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.getBoolean(-1))
+                .isInstanceOfAny(
+                        IllegalStateException.class,
+                        NullPointerException.class,
+                        IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.getBoolean(1))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.getBoolean(segment.size()))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.getBoolean(-segment.size()))
+                .isInstanceOfAny(
+                        IllegalStateException.class,
+                        NullPointerException.class,
+                        IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.getBoolean(Integer.MAX_VALUE))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.getBoolean(Integer.MIN_VALUE))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
 
-        try {
-            segment.getBoolean(0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.getBoolean(-1);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.getBoolean(1);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.getBoolean(segment.size());
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.getBoolean(-segment.size());
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.getBoolean(Integer.MAX_VALUE);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.getBoolean(Integer.MIN_VALUE);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.putBoolean(0, true);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.putBoolean(-1, true);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.putBoolean(1, true);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.putBoolean(segment.size(), true);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.putBoolean(-segment.size(), true);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.putBoolean(Integer.MAX_VALUE, true);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
-
-        try {
-            segment.putBoolean(Integer.MIN_VALUE, true);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | NullPointerException ignored) {
-        }
+        assertThatThrownBy(() -> segment.putBoolean(0, true))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.putBoolean(-1, true))
+                .isInstanceOfAny(
+                        IllegalStateException.class,
+                        NullPointerException.class,
+                        IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.putBoolean(1, true))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.putBoolean(segment.size(), true))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.putBoolean(-segment.size(), true))
+                .isInstanceOfAny(
+                        IllegalStateException.class,
+                        NullPointerException.class,
+                        IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.putBoolean(Integer.MAX_VALUE, true))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
+        assertThatThrownBy(() -> segment.putBoolean(Integer.MIN_VALUE, true))
+                .isInstanceOfAny(IllegalStateException.class, NullPointerException.class);
 
         // --------- char -----------
 
-        try {
-            segment.getChar(0);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
+        assertThatThrownBy(() -> segment.getChar(0)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> segment.getChar(-1))
+                .isInstanceOfAny(IllegalStateException.class, IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.getChar(1)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> segment.getChar(segment.size()))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> segment.getChar(-segment.size()))
+                .isInstanceOfAny(IllegalStateException.class, IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.getChar(Integer.MAX_VALUE))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> segment.getChar(Integer.MIN_VALUE))
+                .isInstanceOf(IllegalStateException.class);
 
-        try {
-            segment.getChar(-1);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.getChar(1);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
-
-        try {
-            segment.getChar(segment.size());
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
-
-        try {
-            segment.getChar(-segment.size());
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.getChar(Integer.MAX_VALUE);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
-
-        try {
-            segment.getChar(Integer.MIN_VALUE);
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
-
-        try {
-            segment.putChar(0, 'a');
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
-
-        try {
-            segment.putChar(-1, 'a');
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.putChar(1, 'a');
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
-
-        try {
-            segment.putChar(segment.size(), 'a');
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
-
-        try {
-            segment.putChar(-segment.size(), 'a');
-            fail("Should fail with an exception");
-        } catch (IllegalStateException | IndexOutOfBoundsException ignored) {
-        }
-
-        try {
-            segment.putChar(Integer.MAX_VALUE, 'a');
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
-
-        try {
-            segment.putChar(Integer.MIN_VALUE, 'a');
-            fail("Should fail with an exception");
-        } catch (IllegalStateException ignored) {
-        }
+        assertThatThrownBy(() -> segment.putChar(0, 'a')).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> segment.putChar(-1, 'a'))
+                .isInstanceOfAny(IllegalStateException.class, IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.putChar(1, 'a')).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> segment.putChar(segment.size(), 'a'))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> segment.putChar(-segment.size(), 'a'))
+                .isInstanceOfAny(IllegalStateException.class, IndexOutOfBoundsException.class);
+        assertThatThrownBy(() -> segment.putChar(Integer.MAX_VALUE, 'a'))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> segment.putChar(Integer.MIN_VALUE, 'a'))
+                .isInstanceOf(IllegalStateException.class);
 
         // --------- short -----------
 

@@ -31,7 +31,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.Is.is;
 
 /** A {@link TypeSerializerUpgradeTestBase} for {@link MapSerializerSnapshot}. */
 class MapSerializerUpgradeTest

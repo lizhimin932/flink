@@ -30,7 +30,7 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** Test for the {@link WatermarkStrategy} class. */
-public class WatermarkStrategyTest {
+class WatermarkStrategyTest {
 
     @Test
     void testDefaultTimeStampAssigner() {

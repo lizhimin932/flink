@@ -24,9 +24,8 @@ import org.apache.flink.core.fs.local.LocalFileSystem;
 import org.apache.flink.core.testutils.CheckedThread;
 import org.apache.flink.core.testutils.OneShotLatch;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -39,7 +38,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 /** A test validating that the initialization of local output paths is properly synchronized. */
@@ -47,7 +46,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 @PrepareForTest(LocalFileSystem.class)
 public class InitOutputPathTest {
 
-    @Rule public final TemporaryFolder tempDir = new TemporaryFolder();
+    @TempDir public File tempDir;
 
     /**
      * This test validates that this test case makes sense - that the error can be produced in the
@@ -55,27 +54,19 @@ public class InitOutputPathTest {
      * latches.
      */
     @Test
-    public void testErrorOccursUnSynchronized() throws Exception {
+    void testErrorOccursUnSynchronized() throws Exception {
         // deactivate the lock to produce the original un-synchronized state
         Field lock = FileSystem.class.getDeclaredField("OUTPUT_DIRECTORY_INIT_LOCK");
         lock.setAccessible(true);
         lock.set(null, new NoOpLock());
 
-        try {
-            // in the original un-synchronized state, we can force the race to occur by using
-            // the proper latch order to control the process of the concurrent threads
-            runTest(true);
-            fail("should fail with an exception");
-        } catch (FileNotFoundException e) {
-            // expected
-        } finally {
-            // reset the proper value
-            lock.set(null, new ReentrantLock(true));
-        }
+        assertThatThrownBy(() -> runTest(true)).isInstanceOf(FileNotFoundException.class);
+
+        lock.set(null, new ReentrantLock(true));
     }
 
     @Test
-    public void testProperSynchronized() throws Exception {
+    void testProperSynchronized() throws Exception {
         // in the synchronized variant, we cannot use the "await latches" because not
         // both threads can make process interleaved (due to the synchronization)
         // the test uses sleeps (rather than latches) to produce the same interleaving.
@@ -87,7 +78,7 @@ public class InitOutputPathTest {
     }
 
     private void runTest(final boolean useAwaits) throws Exception {
-        final File tempFile = tempDir.newFile();
+        final File tempFile = File.createTempFile("junit", null, tempDir);
         final Path path1 = new Path(tempFile.getAbsolutePath(), "1");
         final Path path2 = new Path(tempFile.getAbsolutePath(), "2");
 

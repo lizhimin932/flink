@@ -32,8 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** Tests for {@link StructuredOptionsSplitter}. */
 @RunWith(Parameterized.class)
@@ -108,7 +107,7 @@ public class StructuredOptionsSplitterTest {
                 StructuredOptionsSplitter.splitEscaped(
                         testSpec.getString(), testSpec.getDelimiter());
 
-        assertThat(splits, equalTo(testSpec.getExpectedSplits()));
+        assertThat(splits).isEqualTo(testSpec.getExpectedSplits());
     }
 
     private static class TestSpec {
