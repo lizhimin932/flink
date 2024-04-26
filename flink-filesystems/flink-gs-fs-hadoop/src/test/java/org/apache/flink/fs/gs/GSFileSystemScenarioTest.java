@@ -161,7 +161,7 @@ class GSFileSystemScenarioTest {
 
         // there should be exactly one blob after commit, with the expected contents.
         // all temporary blobs should be removed.
-        assertThat(storage.blobs.size()).isEqualTo(1);
+        assertThat(storage.blobs.size()).isOne();
         MockBlobStorage.BlobValue blobValue = storage.blobs.get(blobIdentifier);
         assertThat(blobValue.content).isEqualTo(data);
     }
@@ -252,7 +252,7 @@ class GSFileSystemScenarioTest {
 
             // there should be exactly one blob after commit, with the expected contents.
             // all temporary blobs should be removed.
-            assertThat(storage.blobs.size()).isEqualTo(1);
+            assertThat(storage.blobs.size()).isOne();
             MockBlobStorage.BlobValue blobValue = storage.blobs.get(blobIdentifier);
             assertThat(blobValue.content).isEqualTo(expectedData.toByteArray());
         }
