@@ -87,7 +87,7 @@ public class ForStDBOperationTestBase {
 
     protected ContextKey<Integer> buildContextKey(int i) {
         int keyGroup = KeyGroupRangeAssignment.assignToKeyGroup(i, 128);
-        RecordContext<Integer> recordContext = new RecordContext<>(i, i, t -> {}, keyGroup);
+        RecordContext<Integer> recordContext = new RecordContext<>(i, i, t -> {}, keyGroup, 0);
         return new ContextKey<>(recordContext);
     }
 
