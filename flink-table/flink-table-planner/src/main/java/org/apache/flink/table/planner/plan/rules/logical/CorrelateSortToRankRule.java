@@ -245,7 +245,7 @@ public class CorrelateSortToRankRule
                                                                                                                                         .class)
                                                                                                                         .anyInputs()))))
                         .relBuilderFactory(FlinkRelFactories.FLINK_REL_BUILDER())
-                        .description("FlinkLimit0RemoveRule")
+                        .description("CorrelateSortToRankRule")
                         .build();
 
         @Override
