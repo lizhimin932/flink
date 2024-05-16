@@ -20,7 +20,9 @@ package org.apache.flink.runtime.asyncprocessing;
 
 import javax.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -54,6 +56,8 @@ public class RecordContext<K> extends ReferenceCounted<RecordContext.DisposerRun
     /** The keyGroup to which key belongs. */
     private final int keyGroup;
 
+    private final ArrayList<AtomicReference<?>> declaredVariables;
+
     /**
      * The extra context info which is used to hold customized data defined by state backend. The
      * state backend can use this field to cache some data that can be used multiple times in
@@ -61,13 +65,22 @@ public class RecordContext<K> extends ReferenceCounted<RecordContext.DisposerRun
      */
     private @Nullable volatile Object extra;
 
-    public RecordContext(Object record, K key, Consumer<RecordContext<K>> disposer, int keyGroup) {
+    public RecordContext(
+            Object record,
+            K key,
+            Consumer<RecordContext<K>> disposer,
+            int keyGroup,
+            int variableCount) {
         super(0);
         this.record = record;
         this.key = key;
         this.keyOccupied = false;
         this.disposer = disposer;
         this.keyGroup = keyGroup;
+        this.declaredVariables = new ArrayList<>(variableCount);
+        for (int i = 0; i < variableCount; i++) {
+            declaredVariables.add(null);
+        }
     }
 
     public Object getRecord() {
@@ -102,6 +115,14 @@ public class RecordContext<K> extends ReferenceCounted<RecordContext.DisposerRun
 
     public int getKeyGroup() {
         return keyGroup;
+    }
+
+    public AtomicReference<?> getVariableReference(int i) {
+        return i >= declaredVariables.size() ? null : declaredVariables.get(i);
+    }
+
+    public void setVariableReference(int i, AtomicReference<?> reference) {
+        declaredVariables.set(i, reference);
     }
 
     public void setExtra(Object extra) {

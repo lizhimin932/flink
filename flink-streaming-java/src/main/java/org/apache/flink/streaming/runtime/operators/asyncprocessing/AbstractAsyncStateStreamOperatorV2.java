@@ -25,6 +25,7 @@ import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.runtime.asyncprocessing.AsyncExecutionController;
 import org.apache.flink.runtime.asyncprocessing.AsyncStateException;
 import org.apache.flink.runtime.asyncprocessing.RecordContext;
+import org.apache.flink.runtime.asyncprocessing.declare.DeclarationManager;
 import org.apache.flink.runtime.checkpoint.CheckpointOptions;
 import org.apache.flink.runtime.execution.Environment;
 import org.apache.flink.runtime.state.AsyncKeyedStateBackend;
@@ -58,10 +59,13 @@ public abstract class AbstractAsyncStateStreamOperatorV2<OUT> extends AbstractSt
 
     private RecordContext currentProcessingContext;
 
+    private final DeclarationManager declarationManager;
+
     public AbstractAsyncStateStreamOperatorV2(
             StreamOperatorParameters<OUT> parameters, int numberOfInputs) {
         super(parameters, numberOfInputs);
         this.environment = parameters.getContainingTask().getEnvironment();
+        this.declarationManager = new DeclarationManager();
     }
 
     /** Initialize necessary state components for {@link AbstractStreamOperatorV2}. */
@@ -83,6 +87,7 @@ public abstract class AbstractAsyncStateStreamOperatorV2<OUT> extends AbstractSt
                             environment.getMainMailboxExecutor(),
                             this::handleAsyncStateException,
                             asyncKeyedStateBackend.createStateExecutor(),
+                            declarationManager,
                             maxParallelism,
                             asyncBufferSize,
                             asyncBufferTimeout,
@@ -138,6 +143,11 @@ public abstract class AbstractAsyncStateStreamOperatorV2<OUT> extends AbstractSt
     @SuppressWarnings("unchecked")
     public final void preserveRecordOrderAndProcess(ThrowingRunnable<Exception> processing) {
         asyncExecutionController.syncPointRequestWithCallback(processing);
+    }
+
+    @Override
+    public final DeclarationManager getDeclarationManager() {
+        return declarationManager;
     }
 
     @Override

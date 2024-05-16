@@ -306,7 +306,7 @@ public class ContextStateFutureImplTest {
 
     private <K> RecordContext<K> buildRecordContext(Object record, K key) {
         int keyGroup = KeyGroupRangeAssignment.assignToKeyGroup(key, 128);
-        return new RecordContext<>(record, key, (e) -> {}, keyGroup);
+        return new RecordContext<>(record, key, (e) -> {}, keyGroup, 0);
     }
 
     /** A runner that performs single-step debugging. */
