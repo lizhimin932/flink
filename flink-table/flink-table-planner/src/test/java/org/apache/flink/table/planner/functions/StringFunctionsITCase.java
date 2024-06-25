@@ -150,6 +150,11 @@ class StringFunctionsITCase extends BuiltInFunctionTestBase {
                                 "apache.org",
                                 DataTypes.STRING().nullable())
                         .testResult(
+                                $("f1").substringIndex("g", -1),
+                                "SUBSTRING_INDEX(f1, 'g', -1)",
+                                "",
+                                DataTypes.STRING().nullable())
+                        .testResult(
                                 $("f1").substringIndex(".", 3),
                                 "SUBSTRING_INDEX(f1, '.', 3)",
                                 "www.apache.org",
@@ -158,6 +163,11 @@ class StringFunctionsITCase extends BuiltInFunctionTestBase {
                                 $("f1").substringIndex(".", 2),
                                 "SUBSTRING_INDEX(f1, '.', 2)",
                                 "www.apache",
+                                DataTypes.STRING().nullable())
+                        .testResult(
+                                $("f1").substringIndex("w", 1),
+                                "SUBSTRING_INDEX(f1, 'w', 1)",
+                                "",
                                 DataTypes.STRING().nullable())
                         .testSqlValidationError(
                                 "SUBSTRING_INDEX(f1, '.', '')",
@@ -240,6 +250,11 @@ class StringFunctionsITCase extends BuiltInFunctionTestBase {
                                 new byte[] {3, 4, 5, 5},
                                 DataTypes.BYTES().nullable())
                         .testResult(
+                                $("f6").substringIndex($("f5"), -1),
+                                "SUBSTRING_INDEX(f6, f5, -1)",
+                                new byte[] {},
+                                DataTypes.BYTES().nullable())
+                        .testResult(
                                 $("f4").substringIndex($("f5"), 3),
                                 "SUBSTRING_INDEX(f4, f5, 3)",
                                 new byte[] {1, 2, 3, 3},
@@ -248,6 +263,11 @@ class StringFunctionsITCase extends BuiltInFunctionTestBase {
                                 $("f4").substringIndex($("f5"), 5),
                                 "SUBSTRING_INDEX(f4, f5, 5)",
                                 new byte[] {1, 2, 3, 3, 3, 4, 5, 5},
+                                DataTypes.BYTES().nullable())
+                        .testResult(
+                                $("f6").substringIndex($("f5"), 1),
+                                "SUBSTRING_INDEX(f6, f5, 1)",
+                                new byte[] {},
                                 DataTypes.BYTES().nullable())
                         .testSqlValidationError(
                                 "SUBSTRING_INDEX(f4, f5, '')",

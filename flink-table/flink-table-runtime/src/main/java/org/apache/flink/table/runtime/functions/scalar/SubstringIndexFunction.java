@@ -40,23 +40,23 @@ public class SubstringIndexFunction extends BuiltInScalarFunction {
 
     public @Nullable StringData eval(
             @Nullable StringData expr, @Nullable StringData delim, @Nullable Integer count) {
+        if (expr == null || delim == null || count == null) {
+            return null;
+        }
+
+        if (count == 0) {
+            return BinaryStringData.EMPTY_UTF8;
+        }
+        String str = expr.toString();
+        if (str.isEmpty()) {
+            return BinaryStringData.EMPTY_UTF8;
+        }
+        String delimiter = delim.toString();
+        if (delimiter.isEmpty()) {
+            return BinaryStringData.EMPTY_UTF8;
+        }
+
         try {
-            if (expr == null || delim == null || count == null) {
-                return null;
-            }
-
-            if (count == 0) {
-                return BinaryStringData.EMPTY_UTF8;
-            }
-            String str = expr.toString();
-            if (str.isEmpty()) {
-                return BinaryStringData.EMPTY_UTF8;
-            }
-            String delimiter = delim.toString();
-            if (delimiter.isEmpty()) {
-                return BinaryStringData.EMPTY_UTF8;
-            }
-
             if (count > 0) {
                 // get index of the count-th occurrences of delimiter
                 int idx = StringUtils.ordinalIndexOf(str, delimiter, count);
@@ -70,13 +70,12 @@ public class SubstringIndexFunction extends BuiltInScalarFunction {
                     return StringData.fromString(str.substring(idx + delimiter.length()));
                 }
             }
-
-            // can not find enough delimiter
-            return expr;
-
         } catch (Throwable t) {
             throw new FlinkRuntimeException(t);
         }
+
+        // can not find enough delimiter
+        return expr;
     }
 
     public @Nullable byte[] eval(
