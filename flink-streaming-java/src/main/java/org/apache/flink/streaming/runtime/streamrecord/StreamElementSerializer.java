@@ -169,7 +169,11 @@ public final class StreamElementSerializer<T> extends TypeSerializer<StreamEleme
         } else if (tag == TAG_REC_WITHOUT_TIMESTAMP) {
             typeSerializer.copy(source, target);
         } else if (tag == TAG_WATERMARK) {
-            target.writeLong(source.readLong());
+            String watermarkClazz = source.readUTF();
+            WatermarkDeclaration.WatermarkSerde watermarkSerde = watermarkDeclarationMap.get(watermarkClazz);
+            Watermark watermark = watermarkSerde.deserialize(source);
+            target.writeUTF(watermarkClazz);
+            watermarkSerde.serialize(watermark, target);
         }
         //        else if (tag == TAG_INTERNAL_WATERMARK) {
         //            target.writeInt(source.readInt());
@@ -205,7 +209,6 @@ public final class StreamElementSerializer<T> extends TypeSerializer<StreamEleme
             target.write(TAG_WATERMARK);
             Watermark genericWatermark = value.asWatermark().getWatermark();
             String identifier = genericWatermark.getClass().getName();
-            System.out.println(identifier);
             target.writeUTF(identifier);
             watermarkDeclarationMap.get(identifier).serialize(genericWatermark, target);
 

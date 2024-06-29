@@ -84,9 +84,7 @@ public class TimestampWatermark implements Watermark {
 
     @Override
     public boolean equals(Object o) {
-        return this == o
-                || o != null
-                        && o.getClass() == TimestampWatermark.class
+        return (o instanceof TimestampWatermark)
                         && ((TimestampWatermark) o).timestamp == this.timestamp;
     }
 

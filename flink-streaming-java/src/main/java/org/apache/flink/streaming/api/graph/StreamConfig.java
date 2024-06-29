@@ -317,6 +317,9 @@ public class StreamConfig implements Serializable {
             Set<Class<? extends WatermarkDeclaration>> clazzes =
                     InstantiationUtil.readObjectFromConfig(this.config, WATERMARK_DECLARATIONS, cl);
             Set<WatermarkDeclaration> result = new HashSet<>();
+            if (clazzes == null) {
+                return result;
+            }
             for (Class<? extends WatermarkDeclaration> clazz : clazzes) {
                 Constructor<? extends WatermarkDeclaration> constructor =
                         clazz.getDeclaredConstructor();

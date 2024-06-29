@@ -26,14 +26,14 @@ import org.apache.flink.streaming.runtime.streamrecord.StreamElement;
 @PublicEvolving
 public final class WatermarkEvent extends StreamElement {
 
-    private final Watermark genericWatermark;
+    private final Watermark watermark;
 
-    public WatermarkEvent(Watermark genericWatermark) {
-        this.genericWatermark = genericWatermark;
+    public WatermarkEvent(Watermark watermark) {
+        this.watermark = watermark;
     }
 
     public Watermark getWatermark() {
-        return genericWatermark;
+        return watermark;
     }
 
     // ------------------------------------------------------------------------
@@ -43,7 +43,7 @@ public final class WatermarkEvent extends StreamElement {
         return this == o
                 || o != null
                         && o.getClass() == this.getClass()
-                        && ((WatermarkEvent) o).genericWatermark.equals(this.getWatermark());
+                        && ((WatermarkEvent) o).watermark.equals(this.getWatermark());
     }
 
     //    @Override
