@@ -28,6 +28,7 @@ class RowTimeDescriptorTests(PyFlinkTestCase):
 
     maxDiff = None
     def test_timestamps_from_field(self):
+
         rowtime = Rowtime().timestamps_from_field("rtime")
 
         properties = rowtime.to_properties()
