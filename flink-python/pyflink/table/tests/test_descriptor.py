@@ -27,6 +27,7 @@ from pyflink.testing.test_case_utils import PyFlinkTestCase
 class RowTimeDescriptorTests(PyFlinkTestCase):
 
     maxDiff = None
+
     def test_timestamps_from_field(self):
 
         rowtime = Rowtime().timestamps_from_field("rtime")
@@ -92,7 +93,7 @@ class RowTimeDescriptorTests(PyFlinkTestCase):
             'rowtime.watermarks.serialized':
                 'rO0ABXNyAD5vcmcuYXBhY2hlLmZsaW5rLnRhYmxlLnV0aWxzLlRlc3RpbmdEZXNjcmlwdG9ycyRDdXN0b2'
                 '1Bc3NpZ25lcpap35orpIFXAgAAeHIAR29yZy5hcGFjaGUuZmxpbmsudGFibGUuc291cmNlcy53bXN0cmF0'
-                'ZWdpZXMuUHVuY3R1YXRlZFdhdGVybWFya0Fzc2lnbmVygVHOe6GlrvQCAAB4cgA9b3JnLmFwYWNoZS5mbG'
+                'ZWdpZXMuUHVuY3R1YXRlZFdhdGVybWFya0Fzc2lnbmVy1g4_1MYTr2oCAAB4cgA9b3JnLmFwYWNoZS5mbG'
                 'luay50YWJsZS5zb3VyY2VzLndtc3RyYXRlZ2llcy5XYXRlcm1hcmtTdHJhdGVned57foNjlmk-AgAAeHA'}
         self.assertEqual(expected, properties)
 
