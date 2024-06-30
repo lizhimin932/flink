@@ -95,6 +95,12 @@ public class ProcessOperator<IN, OUT>
     }
 
     @Override
+    public void close() throws Exception {
+        super.close();
+        userFunction.close();
+    }
+
+    @Override
     public void processElement(StreamRecord<IN> element) throws Exception {
         outputCollector.setTimestampFromStreamRecord(element);
         userFunction.processRecord(element.getValue(), outputCollector, partitionedContext);
