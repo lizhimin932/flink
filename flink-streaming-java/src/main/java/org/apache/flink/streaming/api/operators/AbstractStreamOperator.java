@@ -61,6 +61,7 @@ import org.apache.flink.streaming.runtime.tasks.ProcessingTimeService;
 import org.apache.flink.streaming.runtime.tasks.StreamTask;
 import org.apache.flink.streaming.runtime.watermarkstatus.WatermarkStatus;
 import org.apache.flink.streaming.util.LatencyStats;
+import org.apache.flink.streaming.util.watermark.WatermarkUtils;
 import org.apache.flink.util.Preconditions;
 
 import org.slf4j.Logger;
@@ -667,7 +668,13 @@ public abstract class AbstractStreamOperator<OUT>
     }
 
     public void processWatermark(WatermarkEvent mark) throws Exception {
-        if (watermarkProcessor != null && mark.getWatermark() instanceof TimestampWatermark) {
+        Watermark watermark = mark.getWatermark();
+        if (!(watermark instanceof TimestampWatermark)) {
+            emitWatermarkDirectly(mark);
+            return;
+        }
+
+        if (watermarkProcessor != null) {
             watermarkProcessor.emitWatermarkInsideMailbox(mark);
         } else {
             emitWatermarkDirectly(mark);
@@ -709,8 +716,8 @@ public abstract class AbstractStreamOperator<OUT>
         boolean wasIdle = combinedWatermark.isIdle();
         if (combinedWatermark.updateStatus(index, watermarkStatus.isIdle())) {
             processWatermark(
-                    new WatermarkEvent(
-                            new TimestampWatermark(combinedWatermark.getCombinedWatermark())));
+                    WatermarkUtils.createWatermarkEventFromTimestamp(
+                            combinedWatermark.getCombinedWatermark()));
         }
         if (wasIdle != combinedWatermark.isIdle()) {
             output.emitWatermarkStatus(watermarkStatus);

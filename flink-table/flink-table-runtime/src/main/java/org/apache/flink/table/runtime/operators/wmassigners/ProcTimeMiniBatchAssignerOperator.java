@@ -106,12 +106,13 @@ public class ProcTimeMiniBatchAssignerOperator extends AbstractStreamOperator<Ro
         // if we receive a Long.MAX_VALUE watermark we forward it since it is used
         // to signal the end of input and to not block watermark progress downstream
         Optional<Long> maybeTimestamp = WatermarkUtils.getTimestamp(mark);
-        if (maybeTimestamp.isPresent()
-                && maybeTimestamp.get() == Long.MAX_VALUE
-                && currentWatermark != Long.MAX_VALUE) {
-            currentWatermark = Long.MAX_VALUE;
+        if (!maybeTimestamp.isPresent()) {
+            // fast forward
             output.emitWatermark(mark);
-        } else {
+            return;
+        }
+        if (maybeTimestamp.get() == Long.MAX_VALUE && currentWatermark != Long.MAX_VALUE) {
+            currentWatermark = Long.MAX_VALUE;
             output.emitWatermark(mark);
         }
     }

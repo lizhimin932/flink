@@ -170,7 +170,8 @@ public final class StreamElementSerializer<T> extends TypeSerializer<StreamEleme
             typeSerializer.copy(source, target);
         } else if (tag == TAG_WATERMARK) {
             String watermarkClazz = source.readUTF();
-            WatermarkDeclaration.WatermarkSerde watermarkSerde = watermarkDeclarationMap.get(watermarkClazz);
+            WatermarkDeclaration.WatermarkSerde watermarkSerde =
+                    watermarkDeclarationMap.get(watermarkClazz);
             Watermark watermark = watermarkSerde.deserialize(source);
             target.writeUTF(watermarkClazz);
             watermarkSerde.serialize(watermark, target);

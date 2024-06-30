@@ -190,16 +190,17 @@ public class WatermarkAssignerOperator extends AbstractStreamOperator<RowData>
     public void processWatermark(WatermarkEvent mark) throws Exception {
         // if we receive a Long.MAX_VALUE watermark we forward it since it is used
         // to signal the end of input and to not block watermark progress downstream
-        Optional<Long> maybeTimstamp = WatermarkUtils.getTimestamp(mark);
-        if (maybeTimstamp.isPresent()
-                && maybeTimstamp.get() == Long.MAX_VALUE
-                && currentWatermark != Long.MAX_VALUE) {
+        Optional<Long> maybeTimestamp = WatermarkUtils.getTimestamp(mark);
+        if (!maybeTimestamp.isPresent()) {
+            output.emitWatermark(mark);
+            return;
+        }
+        if (maybeTimestamp.get() == Long.MAX_VALUE && currentWatermark != Long.MAX_VALUE) {
             if (isIdlenessEnabled() && currentStatus.equals(WatermarkStatus.IDLE)) {
                 // mark the channel active
                 emitWatermarkStatus(WatermarkStatus.ACTIVE);
             }
-        } else {
-            // fast forward
+            currentWatermark = Long.MAX_VALUE;
             output.emitWatermark(mark);
         }
     }
