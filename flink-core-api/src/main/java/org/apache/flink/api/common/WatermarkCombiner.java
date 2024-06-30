@@ -18,13 +18,16 @@
 
 package org.apache.flink.api.common;
 
+import org.apache.flink.annotation.Experimental;
 import org.apache.flink.api.common.eventtime.Watermark;
 
+@Experimental
 public interface WatermarkCombiner {
     void combineWatermark(Watermark watermark, Context context, WatermarkOutput output)
             throws Exception;
 
     /** This interface provides information of all channels. */
+    @Experimental
     interface Context {
         int getNumberOfInputChannels();
 

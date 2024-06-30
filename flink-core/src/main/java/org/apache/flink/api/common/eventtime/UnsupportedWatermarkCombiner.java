@@ -18,9 +18,11 @@
 
 package org.apache.flink.api.common.eventtime;
 
+import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.common.WatermarkCombiner;
 import org.apache.flink.api.common.WatermarkOutput;
 
+@Internal
 public class UnsupportedWatermarkCombiner implements WatermarkCombiner {
     @Override
     public void combineWatermark(Watermark watermark, Context context, WatermarkOutput output)

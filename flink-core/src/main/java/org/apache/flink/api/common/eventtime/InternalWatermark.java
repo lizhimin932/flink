@@ -18,8 +18,11 @@
 
 package org.apache.flink.api.common.eventtime;
 
+import org.apache.flink.annotation.Internal;
+
 import java.util.Objects;
 
+@Internal
 public class InternalWatermark extends TimestampWatermark {
     private final int subpartitionIndex;
 

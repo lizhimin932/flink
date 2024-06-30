@@ -18,12 +18,14 @@
 
 package org.apache.flink.api.common.eventtime;
 
+import org.apache.flink.annotation.Experimental;
 import org.apache.flink.api.common.WatermarkDeclaration;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
 
 import java.io.IOException;
 
+@Experimental
 public class TimestampWatermarkDeclaration implements WatermarkDeclaration.WatermarkSerde {
     @Override
     public Class<TimestampWatermark> watermarkClass() {

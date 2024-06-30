@@ -18,11 +18,13 @@
 
 package org.apache.flink.api.common;
 
+import org.apache.flink.annotation.Experimental;
 import org.apache.flink.api.common.eventtime.Watermark;
 
 import java.io.Serializable;
 
 /** This class defines watermark handling policy for ProcessOperator. */
+@Experimental
 public interface WatermarkPolicy extends Serializable {
 
     /**
@@ -30,6 +32,7 @@ public interface WatermarkPolicy extends Serializable {
      */
     WatermarkResult useWatermark(Watermark watermark);
 
+    @Experimental
     enum WatermarkResult {
         /** Peek the watermark. The respobsibility to propagate is on the framework */
         PEEK,

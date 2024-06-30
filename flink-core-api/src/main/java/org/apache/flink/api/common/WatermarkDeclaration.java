@@ -18,6 +18,7 @@
 
 package org.apache.flink.api.common;
 
+import org.apache.flink.annotation.Experimental;
 import org.apache.flink.api.common.eventtime.Watermark;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
@@ -29,6 +30,7 @@ import java.io.Serializable;
  * This class defines watermark handling policy for ProcessOperator. Note that implementations of
  * this interface must ensure to provide the default constructor.
  */
+@Experimental
 public interface WatermarkDeclaration extends Serializable {
     /** Declare generated watermarks by its operator upfront. */
     WatermarkSerde declaredWatermark();
@@ -40,6 +42,7 @@ public interface WatermarkDeclaration extends Serializable {
      * Declaration for Watermark classes. Note that the subclasses of this interface should ensure
      * zero-argument constructor.
      */
+    @Experimental
     interface WatermarkSerde extends Serializable {
         Class<? extends Watermark> watermarkClass();
 

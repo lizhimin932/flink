@@ -18,9 +18,11 @@
 
 package org.apache.flink.api.common;
 
+import org.apache.flink.annotation.Experimental;
 import org.apache.flink.api.common.eventtime.Watermark;
 
 /** This class defines watermark handling policy for ProcessOperator. */
+@Experimental
 public class DefaultWatermarkPolicy implements WatermarkPolicy {
 
     @Override

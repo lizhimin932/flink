@@ -18,12 +18,14 @@
 
 package org.apache.flink.datastream.api;
 
+import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.common.WatermarkDeclaration;
 
 import java.util.Collections;
 import java.util.Set;
 
 /** Interface to expose {@link WatermarkDeclaration}s. */
+@Internal
 public interface WatermarkDeclarable {
 
     /** Provide a Set of {@link WatermarkDeclaration} implementations. */

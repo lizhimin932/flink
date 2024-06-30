@@ -18,12 +18,14 @@
 
 package org.apache.flink.api.common.eventtime;
 
+import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.common.WatermarkDeclaration;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
 
 import java.io.IOException;
 
+@Internal
 public class InternalWatermarkDeclaration implements WatermarkDeclaration.WatermarkSerde {
     @Override
     public Class<InternalWatermark> watermarkClass() {

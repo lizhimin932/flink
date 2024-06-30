@@ -18,11 +18,13 @@
 
 package org.apache.flink.api.common;
 
+import org.apache.flink.annotation.Experimental;
 import org.apache.flink.api.common.eventtime.Watermark;
 
 /*
  * Wrapper on top of {@link DataOutput} to limit the emit process to only Watermarks.
  */
+@Experimental
 public interface WatermarkOutput {
     void emitWatermark(Watermark watermark);
 }

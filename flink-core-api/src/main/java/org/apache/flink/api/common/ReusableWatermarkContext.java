@@ -18,6 +18,9 @@
 
 package org.apache.flink.api.common;
 
+import org.apache.flink.annotation.Internal;
+
+@Internal
 public class ReusableWatermarkContext implements WatermarkCombiner.Context {
 
     private int numChannels;

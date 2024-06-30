@@ -18,8 +18,10 @@
 
 package org.apache.flink.api.common;
 
+import org.apache.flink.annotation.Experimental;
 import org.apache.flink.api.common.eventtime.Watermark;
 
+@Experimental
 public interface WatermarkManager {
     /**
      * Emit a watermark from process function.

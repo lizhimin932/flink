@@ -215,12 +215,12 @@ public class ContinuousFileProcessingTest {
         Assert.assertEquals(300, ((TimestampWatermark) tmpWatermark).getTimestamp());
 
         tester.setProcessingTime(401);
-        Assert.assertTrue(output.peek() instanceof Watermark);
+        Assert.assertTrue(output.peek() instanceof WatermarkEvent);
         tmpWatermark = ((WatermarkEvent) output.poll()).getWatermark();
         Assert.assertEquals(400, ((TimestampWatermark) tmpWatermark).getTimestamp());
 
         tester.setProcessingTime(501);
-        Assert.assertTrue(output.peek() instanceof Watermark);
+        Assert.assertTrue(output.peek() instanceof WatermarkEvent);
         tmpWatermark = ((WatermarkEvent) output.poll()).getWatermark();
         Assert.assertEquals(500, ((TimestampWatermark) tmpWatermark).getTimestamp());
 
@@ -284,8 +284,11 @@ public class ContinuousFileProcessingTest {
                         actualFileContents.put(fileIdx, content);
                     }
                     content.add(element.getValue() + "\n");
-                } else if (line instanceof TimestampWatermark) {
-                    long watermark = ((TimestampWatermark) line).getTimestamp();
+                } else if (line instanceof WatermarkEvent) {
+                    Watermark generalizedWatermark = ((WatermarkEvent) line).getWatermark();
+                    Assert.assertTrue(generalizedWatermark instanceof TimestampWatermark);
+
+                    long watermark = ((TimestampWatermark) generalizedWatermark).getTimestamp();
 
                     Assert.assertEquals(
                             nextTimestamp - (nextTimestamp % watermarkInterval), watermark);
