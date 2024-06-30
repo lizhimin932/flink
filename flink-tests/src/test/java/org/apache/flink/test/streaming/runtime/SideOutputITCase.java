@@ -136,7 +136,8 @@ public class SideOutputITCase extends AbstractTestBaseJUnit4 implements Serializ
             @Override
             public void processWatermark(WatermarkEvent mark) throws Exception {
                 super.processWatermark(mark);
-                WatermarkUtils.getTimestamp(mark).ifPresent(l -> new StreamRecord<>("WM:" + l));
+                WatermarkUtils.getTimestamp(mark)
+                        .ifPresent(l -> output.collect(new StreamRecord<>("WM:" + l)));
             }
         }
 
