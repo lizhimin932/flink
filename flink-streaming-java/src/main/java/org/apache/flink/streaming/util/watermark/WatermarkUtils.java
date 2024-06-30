@@ -18,7 +18,6 @@
 
 package org.apache.flink.streaming.util.watermark;
 
-import org.apache.flink.annotation.Public;
 import org.apache.flink.api.common.WatermarkDeclaration;
 import org.apache.flink.api.common.eventtime.TimestampWatermark;
 import org.apache.flink.api.common.eventtime.Watermark;
@@ -30,7 +29,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
-@Public
 public class WatermarkUtils {
 
     public static final WatermarkEvent MAX_TIMESTAMP_WATEMMARK_EVENT =
