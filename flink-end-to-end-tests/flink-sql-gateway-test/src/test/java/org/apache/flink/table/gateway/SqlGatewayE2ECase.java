@@ -191,7 +191,8 @@ public class SqlGatewayE2ECase extends TestLogger {
                     () -> {
                         List<RowData> result =
                                 gatewayRestClient.executeStatementWithResult(
-                                        "select * from my_materialized_table_in_continuous_mode order by ds, user");
+                                        "select * from my_materialized_table_in_continuous_mode order by ds, user",
+                                        true);
                         return result.toString()
                                 .equals("[+I(2024-06-20,Alice,INFO), +I(2024-06-20,Bob,ERROR)]");
                     },
@@ -223,7 +224,8 @@ public class SqlGatewayE2ECase extends TestLogger {
                     () -> {
                         List<RowData> result =
                                 gatewayRestClient.executeStatementWithResult(
-                                        "select * from my_materialized_table_in_continuous_mode order by ds, user");
+                                        "select * from my_materialized_table_in_continuous_mode order by ds, user",
+                                        true);
                         return result.toString()
                                 .equals(
                                         "[+I(2024-06-20,Alice,INFO), +I(2024-06-20,Bob,ERROR), +I(2024-06-20,Charlie,WARN)]");
@@ -316,7 +318,8 @@ public class SqlGatewayE2ECase extends TestLogger {
                     () -> {
                         List<RowData> result =
                                 gatewayRestClient.executeStatementWithResult(
-                                        "select * from my_materialized_table_in_full_mode order by ds");
+                                        "select * from my_materialized_table_in_full_mode order by ds",
+                                        true);
                         String resultStr = result.toString();
                         return (resultStr.contains(String.format("+I(%s,1)", todayDateStr))
                                         || resultStr.contains(
@@ -351,7 +354,8 @@ public class SqlGatewayE2ECase extends TestLogger {
                     () -> {
                         List<RowData> result =
                                 gatewayRestClient.executeStatementWithResult(
-                                        "select * from my_materialized_table_in_full_mode order by ds");
+                                        "select * from my_materialized_table_in_full_mode order by ds",
+                                        true);
                         String resultStr = result.toString();
                         return (resultStr.contains(String.format("+I(%s,2)", todayDateStr))
                                         || resultStr.contains(
@@ -382,7 +386,8 @@ public class SqlGatewayE2ECase extends TestLogger {
                     () -> {
                         List<RowData> result =
                                 gatewayRestClient.executeStatementWithResult(
-                                        "select * from my_materialized_table_in_full_mode order by ds");
+                                        "select * from my_materialized_table_in_full_mode order by ds",
+                                        true);
                         return result.toString()
                                 .equals(
                                         String.format(

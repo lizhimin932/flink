@@ -583,13 +583,22 @@ public final class FlinkDistribution {
             return result;
         }
 
-        public List<RowData> executeStatementWithResult(String sql) {
+        public List<RowData> executeStatementWithResult(String statement) {
+            return executeStatementWithResult(statement, false);
+        }
+
+        public List<RowData> executeStatementWithResult(String statement, boolean ignoreError) {
             try {
-                String operationHandle = executeStatement(sql);
+                String operationHandle = executeStatement(statement);
                 waitUntilOperationTerminate(operationHandle);
                 return getOperationResult(operationHandle);
             } catch (Exception e) {
-                throw new RuntimeException("Execute statement failed", e);
+                if (ignoreError) {
+                    LOG.error("Failed to execute statement {} due to error: ", statement, e);
+                    return Collections.emptyList();
+                } else {
+                    throw new RuntimeException(e);
+                }
             }
         }
 
