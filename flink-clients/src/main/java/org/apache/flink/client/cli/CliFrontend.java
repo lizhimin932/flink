@@ -330,7 +330,7 @@ public class CliFrontend {
 
         final ExecutionConfigAccessor executionParameters =
                 ExecutionConfigAccessor.fromProgramOptions(
-                        checkNotNull(programOptions), checkNotNull(jobJars));
+                        checkNotNull(programOptions), checkNotNull(jobJars), false);
 
         executionParameters.applyToConfiguration(effectiveConfiguration);
 
